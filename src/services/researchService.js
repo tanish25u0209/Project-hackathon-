@@ -2,9 +2,11 @@
 
 const { buildResearchPrompt, buildDeepeningPrompt } = require('../utils/promptBuilder');
 const { executeAllProviders, partitionProviderResults, executeDeepeningProvider } = require('../providers');
+const { callOpenRouter } = require('../providers/openrouter');
 const { generateEmbeddings, buildIdeaEmbeddingText } = require('./embeddingService');
 const { runSimilarityPipeline } = require('./similarityService');
 const repo = require('./sessionRepository');
+const config = require('../config');
 const { AppError, NotFoundError } = require('../utils/errors');
 const logger = require('../utils/logger');
 
@@ -26,12 +28,50 @@ const logger = require('../utils/logger');
  * @returns {Promise<Object>}
  */
 async function runResearchPipeline(problemStatement, metadata = {}) {
-    // ── Step 1: Create session ──────────────────────────────────────────────
-    const session = await repo.createSession(problemStatement, metadata);
+    // ── Step 1: Create or reuse session ─────────────────────────────────────
+    let session;
+    if (metadata && metadata.sessionId) {
+        session = await repo.getSessionById(metadata.sessionId);
+    } else {
+        session = await repo.createSession(problemStatement, metadata);
+    }
     const sessionId = session.id;
     logger.info('Research pipeline started', { sessionId, problemLength: problemStatement.length });
 
     await repo.updateSessionStatus(sessionId, 'processing');
+
+    const fastMode = process.env.TEMP_FAST_MODE === 'true' || !!metadata.fast;
+    if (fastMode) {
+        logger.info('FAST_MODE enabled: calling DeepSeek only and skipping embeddings/clustering', { sessionId });
+
+        const { system, user } = buildResearchPrompt(problemStatement);
+        const model = config.openRouter.defaultModel || 'deepseek/deepseek-chat';
+
+        const provResult = await callOpenRouter(model, system, user, 'research');
+
+        // persist LLM response for traceability
+        await repo.saveLlmResponse(sessionId, provResult);
+
+        // mark complete — this is a fast/simple result for testing
+        await repo.updateSessionStatus(sessionId, 'completed');
+
+        const uniqueIdeas = provResult.ideas || [];
+
+        return {
+            sessionId,
+            status: 'completed',
+            summary: {
+                totalIdeasGenerated: uniqueIdeas.length,
+                uniqueIdeasReturned: uniqueIdeas.length,
+                duplicatesRemoved: 0,
+                clustersFound: 0,
+                providersSucceeded: 1,
+                providersFailed: 0,
+            },
+            uniqueIdeas,
+            providerStatus: [{ provider: provResult.provider || model, status: 'success', latencyMs: provResult.latencyMs }],
+        };
+    }
 
     try {
         // ── Step 2: Build prompt + call all providers in parallel ───────────────

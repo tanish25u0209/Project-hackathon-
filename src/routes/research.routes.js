@@ -7,10 +7,12 @@ const {
     runResearch,
     runResearchAsync,
     getResearchJobStatus,
+    getSessionStatus,
     deepenResearchIdea,
     validateResearchBody,
     validateDeepenParams,
     validateJobParam,
+    validateSessionParam,
 } = require('../controllers/research.controller');
 
 const router = Router();
@@ -24,6 +26,12 @@ router.use(authenticate);
  * Body: { problemStatement: string, metadata?: object }
  */
 router.post('/', researchLimiter, validateResearchBody, runResearch);
+
+/**
+ * GET /api/v1/research/:sessionId
+ * Poll session status by sessionId (returns session + latest LLM response when available)
+ */
+router.get('/:sessionId', validateSessionParam, getSessionStatus);
 
 /**
  * POST /api/v1/research/async

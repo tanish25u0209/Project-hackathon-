@@ -17,32 +17,11 @@ const logger = require('../utils/logger');
 async function executeAllProviders(systemPrompt, userPrompt) {
     const promises = [];
 
-    // 1. Direct Providers
-    logger.info('Executing direct providers: grok, gemini');
-
-    promises.push(
-        callGrok(systemPrompt, userPrompt)
-            .then((result) => ({ provider: 'grok', status: 'fulfilled', result }))
-            .catch((error) => {
-                logger.error('Provider grok failed', { error: error.message });
-                return { provider: 'grok', status: 'rejected', error };
-            })
-    );
-
-    promises.push(
-        callGemini(systemPrompt, userPrompt)
-            .then((result) => ({ provider: 'gemini', status: 'fulfilled', result }))
-            .catch((error) => {
-                logger.error('Provider gemini failed', { error: error.message });
-                return { provider: 'gemini', status: 'rejected', error };
-            })
-    );
-
-    // 2. OpenRouter Models
-    const openRouterModels = config.openRouter.researchModels;
-    logger.info(`Executing OpenRouter models: ${openRouterModels.join(', ')}`);
-
-    openRouterModels.forEach((model) => {
+    // Fast-mode: only use DeepSeek/default OpenRouter model and skip direct providers
+    const fastMode = process.env.TEMP_FAST_MODE === 'true';
+    if (fastMode) {
+        const model = config.openRouter.defaultModel;
+        logger.info(`FAST_MODE enabled — executing only OpenRouter model: ${model}`);
         promises.push(
             callOpenRouter(model, systemPrompt, userPrompt, 'research')
                 .then((result) => ({ provider: model, status: 'fulfilled', result }))
@@ -51,7 +30,43 @@ async function executeAllProviders(systemPrompt, userPrompt) {
                     return { provider: model, status: 'rejected', error };
                 })
         );
-    });
+    } else {
+        // 1. Direct Providers
+        logger.info('Executing direct providers: grok, gemini');
+
+        promises.push(
+            callGrok(systemPrompt, userPrompt)
+                .then((result) => ({ provider: 'grok', status: 'fulfilled', result }))
+                .catch((error) => {
+                    logger.error('Provider grok failed', { error: error.message });
+                    return { provider: 'grok', status: 'rejected', error };
+                })
+        );
+
+        promises.push(
+            callGemini(systemPrompt, userPrompt)
+                .then((result) => ({ provider: 'gemini', status: 'fulfilled', result }))
+                .catch((error) => {
+                    logger.error('Provider gemini failed', { error: error.message });
+                    return { provider: 'gemini', status: 'rejected', error };
+                })
+        );
+
+        // 2. OpenRouter Models
+        const openRouterModels = config.openRouter.researchModels;
+        logger.info(`Executing OpenRouter models: ${openRouterModels.join(', ')}`);
+
+        openRouterModels.forEach((model) => {
+            promises.push(
+                callOpenRouter(model, systemPrompt, userPrompt, 'research')
+                    .then((result) => ({ provider: model, status: 'fulfilled', result }))
+                    .catch((error) => {
+                        logger.error(`Model ${model} failed`, { error: error.message });
+                        return { provider: model, status: 'rejected', error };
+                    })
+            );
+        });
+    }
 
     const settled = await Promise.allSettled(promises);
     return settled.map((s) => (s.status === 'fulfilled' ? s.value : s.reason));

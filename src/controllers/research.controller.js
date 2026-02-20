@@ -3,6 +3,7 @@
 const { body, param, query } = require('express-validator');
 const { runResearchPipeline, deepenIdea } = require('../services/researchService');
 const { addResearchJob, getJobStatus } = require('../queue/researchQueue');
+const repo = require('../services/sessionRepository');
 const { validateRequest } = require('../middleware/validate');
 const { NotFoundError, AppError } = require('../utils/errors');
 const logger = require('../utils/logger');
@@ -43,6 +44,11 @@ const validateJobParam = [
     validateRequest,
 ];
 
+const validateSessionParam = [
+    param('sessionId').isUUID().withMessage('sessionId must be a valid UUID'),
+    validateRequest,
+];
+
 // ─────────────────────────────────────────────
 // Controllers
 // ─────────────────────────────────────────────
@@ -55,21 +61,67 @@ const validateJobParam = [
 async function runResearch(req, res, next) {
     try {
         const { problemStatement, metadata = {} } = req.body;
-
-        logger.info('Sync research request received', {
+        // Option B: create a session and enqueue work — return sessionId immediately
+        logger.info('Creating session and enqueuing research job', {
             problemLength: problemStatement.length,
             ip: req.ip,
         });
 
-        const result = await runResearchPipeline(problemStatement, {
+        const session = await repo.createSession(problemStatement, {
             ...metadata,
-            source: 'api-sync',
+            source: 'api-queued',
             requestIp: req.ip,
         });
 
+        // mark as queued
+        await repo.updateSessionStatus(session.id, 'pending');
+
+        const { jobId } = await addResearchJob(problemStatement, {
+            ...metadata,
+            sessionId: session.id,
+            source: 'api-queue',
+            requestIp: req.ip,
+        });
+
+        res.status(202).json({
+            success: true,
+            data: {
+                sessionId: session.id,
+                jobId,
+                message: 'Session created and research job enqueued. Poll GET /api/v1/research/:sessionId for status.',
+                pollUrl: `/api/v1/research/${session.id}`,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * GET /api/v1/research/:sessionId
+ * Return session status and (when available) the latest LLM response / ideas.
+ */
+async function getSessionStatus(req, res, next) {
+    try {
+        const { sessionId } = req.params;
+        const session = await repo.getSessionById(sessionId);
+
+        // If session is completed, try to include latest LLM response (fast-path friendly)
+        let latestResponse = null;
+        if (session.status === 'completed' || session.status === 'failed' || session.status === 'processing') {
+            try {
+                latestResponse = await repo.getLatestLlmResponse(sessionId);
+            } catch (e) {
+                // non-fatal
+            }
+        }
+
         res.status(200).json({
             success: true,
-            data: result,
+            data: {
+                session,
+                latestLlmResponse: latestResponse || null,
+            },
         });
     } catch (err) {
         next(err);
@@ -150,8 +202,10 @@ module.exports = {
     runResearch,
     runResearchAsync,
     getResearchJobStatus,
+    getSessionStatus,
     deepenResearchIdea,
     validateResearchBody,
     validateDeepenParams,
     validateJobParam,
+    validateSessionParam,
 };

@@ -341,6 +341,27 @@ async function saveDeepeningSession(sessionId, ideaId, data) {
     }
 }
 
+/**
+ * Get the latest LLM response row for a session.
+ * @param {string} sessionId
+ * @returns {Promise<Object|null>} row or null
+ */
+async function getLatestLlmResponse(sessionId) {
+    try {
+        const { rows } = await query(
+            `SELECT id, provider, model, status, raw_response, prompt_tokens, completion_tokens, latency_ms, created_at
+         FROM llm_responses
+         WHERE session_id = $1
+         ORDER BY created_at DESC
+         LIMIT 1`,
+            [sessionId]
+        );
+        return rows.length === 0 ? null : rows[0];
+    } catch (err) {
+        throw new DatabaseError(`Failed to get latest LLM response: ${err.message}`);
+    }
+}
+
 module.exports = {
     createSession,
     updateSessionStatus,
@@ -354,4 +375,5 @@ module.exports = {
     getSessionIdeas,
     getIdeaById,
     saveDeepeningSession,
+    getLatestLlmResponse,
 };

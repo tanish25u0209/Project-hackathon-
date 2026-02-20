@@ -4,8 +4,7 @@ require('dotenv').config();
 
 const requiredEnvVars = [
   'OPENROUTER_API_KEY',
-  'GROK_API_KEY',
-  'GEMINI_API_KEY',
+  'HUGGINGFACE_API_KEY',
   'DB_HOST',
   'DB_NAME',
   'DB_USER',
@@ -45,18 +44,13 @@ const config = {
   },
 
   // Direct Providers
-  grok: {
-    apiKey: process.env.GROK_API_KEY,
-    model: process.env.GROK_MODEL || 'grok-3-beta',
-    maxTokens: parseInt(process.env.GROK_MAX_TOKENS || '2000', 10),
-    timeoutMs: parseInt(process.env.GROK_TIMEOUT_MS || '60000', 10),
-  },
-
-  gemini: {
-    apiKey: process.env.GEMINI_API_KEY,
-    model: process.env.GEMINI_MODEL || 'gemini-1.5-pro',
-    maxTokens: parseInt(process.env.GEMINI_MAX_TOKENS || '2000', 10),
-    timeoutMs: parseInt(process.env.GEMINI_TIMEOUT_MS || '60000', 10),
+  huggingface: {
+    apiKey: process.env.HUGGINGFACE_API_KEY,
+    baseURL: process.env.HUGGINGFACE_BASE_URL || 'https://router.huggingface.co/models',
+    maxTokens: parseInt(process.env.HF_MAX_TOKENS || '2000', 10),
+    timeoutMs: parseInt(process.env.HF_TIMEOUT_MS || '60000', 10),
+    flan_t5Model: process.env.FLAN_T5_MODEL || 'google/flan-t5-xl',
+    llumaModel: process.env.LLAMA_MODEL || 'meta-llama/Llama-2-13b-hf',
   },
 
   // OpenRouter (DeepSeek, Perplexity, Anthropic)
@@ -73,8 +67,8 @@ const config = {
     // Note: 'grok' and 'gemini' are handled directly, so they are NOT in this list
     researchModels: [
       'deepseek/deepseek-chat',
-      'anthropic/claude-3-opus',
-      'perplexity/sonar-pro',
+      'anthropic/claude-3-5-sonnet',
+      'perplexity/sonar',
     ],
   },
 

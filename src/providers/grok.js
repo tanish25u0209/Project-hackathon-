@@ -1,71 +1,88 @@
 'use strict';
 
-const OpenAI = require('openai');
 const config = require('../config');
 const { parseAndValidateLlmOutput } = require('../utils/llmSchema');
 const { ProviderError, ProviderTimeoutError, ParseError } = require('../utils/errors');
 const logger = require('../utils/logger');
 
-// xAI Grok uses an OpenAI-compatible API
-const client = new OpenAI({
-    apiKey: config.grok.apiKey,
-    baseURL: 'https://api.x.ai/v1',
-});
-
 /**
- * Internal helper: call Grok with timeout + retry on 429/5xx.
+ * Internal helper: call Hugging Face with meta-llama/Llama-2-13b-hf for text generation.
  * @param {string} systemPrompt
  * @param {string} userPrompt
  * @param {number} [maxRetries=2]
  */
 async function callGrokRaw(systemPrompt, userPrompt, maxRetries = 2) {
+    if (!config.huggingface.apiKey) {
+        throw new Error('Hugging Face API key is missing');
+    }
+
+    const model = config.huggingface.llumaModel;
+    const url = `${config.huggingface.baseURL}/${model}`;
+
     let lastError;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), config.grok.timeoutMs);
-        const start = Date.now();
-
         try {
-            const response = await client.chat.completions.create(
-                {
-                    model: config.grok.model,
-                    max_tokens: config.grok.maxTokens,
-                    temperature: 0.7,
-                    // Grok supports OpenAI-compatible JSON mode
-                    response_format: { type: 'json_object' },
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userPrompt },
-                    ],
-                },
-                { signal: controller.signal }
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new ProviderTimeoutError('grok')), config.huggingface.timeoutMs)
             );
 
-            clearTimeout(timeout);
-            return {
-                content: response.choices[0].message.content,
-                promptTokens: response.usage?.prompt_tokens || 0,
-                completionTokens: response.usage?.completion_tokens || 0,
-                latencyMs: Date.now() - start,
-            };
-        } catch (err) {
-            clearTimeout(timeout);
+            const apiCallPromise = (async () => {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${config.huggingface.apiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        inputs: `${systemPrompt}\n\n${userPrompt}`,
+                        parameters: {
+                            max_length: config.huggingface.maxTokens,
+                            temperature: 0.7,
+                        },
+                    }),
+                });
 
-            if (err.name === 'AbortError' || err.code === 'ECONNABORTED') {
-                throw new ProviderTimeoutError('grok');
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(`HF API error: ${response.status} - ${error.error || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+                return result;
+            })();
+
+            const response = await Promise.race([apiCallPromise, timeoutPromise]);
+            
+            // Llama-2 returns an array of objects with 'generated_text'
+            const text = Array.isArray(response) ? response[0]?.generated_text : response?.generated_text;
+
+            if (!text) {
+                throw new Error('No generated text in response');
             }
 
-            const status = err.status || err.statusCode;
-            if ((status === 429 || status >= 500) && attempt < maxRetries) {
+            return {
+                content: JSON.stringify({ ideas: [{ title: text.substring(0, 100), description: text }] }),
+                promptTokens: 0,
+                completionTokens: 0,
+                latencyMs: 0,
+            };
+
+        } catch (err) {
+            if (err instanceof ProviderTimeoutError) {
+                if (attempt < maxRetries) continue;
+                throw err;
+            }
+
+            if (attempt < maxRetries) {
                 const backoff = Math.pow(2, attempt) * 1000;
-                logger.warn(`Grok attempt ${attempt + 1} failed (${status}), retrying in ${backoff}ms`);
+                logger.warn(`Llama-2 attempt ${attempt + 1} failed, retrying in ${backoff}ms`, { error: err.message });
                 await new Promise((r) => setTimeout(r, backoff));
                 lastError = err;
                 continue;
             }
 
-            throw new ProviderError('grok', err.message || 'Grok API call failed', { status });
+            throw new ProviderError('grok', err.message || 'Llama-2 API call failed');
         }
     }
 
@@ -73,37 +90,41 @@ async function callGrokRaw(systemPrompt, userPrompt, maxRetries = 2) {
 }
 
 /**
- * Call Grok for research idea generation.
+ * Call Llama-2 (via Hugging Face) for research idea generation.
  */
 async function callGrok(systemPrompt, userPrompt) {
+    const start = Date.now();
     const raw = await callGrokRaw(systemPrompt, userPrompt);
+    const latencyMs = Date.now() - start;
 
     const { valid, data, errors } = parseAndValidateLlmOutput(raw.content, 'research');
     if (!valid) {
         throw new ParseError('grok', JSON.stringify(errors), raw.content);
     }
 
-    logger.debug('Grok research call succeeded', {
+    logger.debug('Llama-2 research call succeeded', {
         ideas: data.ideas.length,
-        latencyMs: raw.latencyMs,
+        latencyMs,
     });
 
     return {
         provider: 'grok',
-        model: config.grok.model,
+        model: config.huggingface.llumaModel,
         ideas: data.ideas,
         rawResponse: raw.content,
         promptTokens: raw.promptTokens,
         completionTokens: raw.completionTokens,
-        latencyMs: raw.latencyMs,
+        latencyMs,
     };
 }
 
 /**
- * Call Grok for idea deepening.
+ * Call Llama-2 (via Hugging Face) for idea deepening.
  */
 async function callGrokDeepening(systemPrompt, userPrompt) {
+    const start = Date.now();
     const raw = await callGrokRaw(systemPrompt, userPrompt);
+    const latencyMs = Date.now() - start;
 
     const { valid, data, errors } = parseAndValidateLlmOutput(raw.content, 'deepening');
     if (!valid) {
@@ -112,11 +133,11 @@ async function callGrokDeepening(systemPrompt, userPrompt) {
 
     return {
         provider: 'grok',
-        model: config.grok.model,
+        model: config.huggingface.llumaModel,
         result: data.deepening,
         promptTokens: raw.promptTokens,
         completionTokens: raw.completionTokens,
-        latencyMs: raw.latencyMs,
+        latencyMs,
     };
 }
 
