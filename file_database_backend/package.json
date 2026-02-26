@@ -1,0 +1,22 @@
+{
+  "name": "gdrive-large-file-backend",
+  "version": "1.0.0",
+  "description": "A Node.js/Express bridge for streaming large files to/from Google Drive via the Drive API v3.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "googleapis": "^140.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
