@@ -2,15 +2,18 @@ services:
   - type: web
     name: research-backend
     env: node
-    plan: free # Change to a paid plan if needed
+    plan: free
     rootDir: research_backend
     buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
-      # Make sure to set these securely in the Render dashboard later:
-      # - key: DATABASE_URL
-      # - key: OPENAI_API_KEY
-      # - key: ANTHROPIC_API_KEY
-      # - key: GEMINI_API_KEY
+
+  - type: web
+    name: storage-backend
+    env: node
+    plan: free
+    rootDir: storage
+    buildCommand: npm install
+    startCommand: npm start
