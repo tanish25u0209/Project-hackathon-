@@ -1,8 +1,13 @@
 // API Client — wraps all backend endpoints
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
+const rawApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1')
+  .trim()
+  .replace(/\/+$/, '')
+const BASE_URL = rawApiBaseUrl.endsWith('/api/v1') ? rawApiBaseUrl : `${rawApiBaseUrl}/api/v1`
 const API_KEY  = import.meta.env.VITE_API_KEY || 'dev_local_api_key_9f3b'
-export const STORAGE_URL = import.meta.env.VITE_STORAGE_URL || 'http://localhost:8000'
+export const STORAGE_URL = (import.meta.env.VITE_STORAGE_URL || 'http://localhost:8000')
+  .trim()
+  .replace(/\/+$/, '')
 
 const AUTH_TOKEN_KEY = 'pf_auth_token'
 const AUTH_USER_KEY = 'pf_auth_user'
