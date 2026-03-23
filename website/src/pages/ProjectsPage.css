@@ -1,0 +1,44 @@
+.projects-create {
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.projects-create__row {
+  display: flex;
+  gap: 10px;
+}
+
+.projects-create__row .input {
+  flex: 1;
+}
+
+.projects-list {
+  display: grid;
+  gap: 10px;
+}
+
+.projects-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+.projects-item h3 {
+  color: var(--text-primary);
+}
+
+.projects-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.projects-empty {
+  padding: 16px;
+}
+
+.projects-error {
+  color: var(--rose);
+  margin-bottom: 12px;
+}

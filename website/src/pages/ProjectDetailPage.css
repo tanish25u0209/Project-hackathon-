@@ -1,0 +1,86 @@
+.project-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.project-error {
+  color: var(--rose);
+  margin-bottom: 12px;
+}
+
+.project-panel {
+  padding: 16px;
+}
+
+.project-invite {
+  display: flex;
+  gap: 10px;
+}
+
+.project-invite .input {
+  flex: 1;
+}
+
+.project-members {
+  display: grid;
+  gap: 8px;
+}
+
+.project-member-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.project-dropzone {
+  padding: 24px;
+  border-style: dashed;
+  margin-bottom: 14px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.project-dropzone--drag {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.project-dropzone__title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.project-dropzone__sub {
+  margin-bottom: 10px;
+}
+
+.project-files-table {
+  display: grid;
+  gap: 8px;
+}
+
+.project-files-head,
+.project-files-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) 100px 120px 180px 210px;
+  gap: 10px;
+  align-items: center;
+}
+
+.project-files-head {
+  color: var(--text-muted);
+  font-size: 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.project-files-row {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.project-files-name {
+  color: var(--text-primary);
+}

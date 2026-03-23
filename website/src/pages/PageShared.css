@@ -1,0 +1,28 @@
+.page {
+  padding: 36px 40px;
+  min-height: 100vh;
+  max-width: 100%;
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.page-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}

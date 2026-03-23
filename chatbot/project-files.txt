@@ -1,0 +1,8 @@
+﻿D:\spit\final idea\favicon.ico
+D:\spit\final idea\index.html
+D:\spit\final idea\README.md
+D:\spit\final idea\robots.txt
+D:\spit\final idea\start-local.ps1
+D:\spit\final idea\~flock.js
+D:\spit\final idea\assets\index-D1nFTFIr.js
+D:\spit\final idea\assets\index-DbSHTNpS.css

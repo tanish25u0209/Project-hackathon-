@@ -1,0 +1,21 @@
+402 : {"error":{"message":"Insufficient credits. This account never purchased credits.
+401 : {"error":{"message":"User not found.","code":401}}
+200 : 
+         
+
+         
+{"id":"gen-1774177895-n3TmvjibOguGUHrRpzwx","object":"chat
+200 : 
+         
+
+         
+{"id":"gen-1774177895-rmXEnfDZzzgbqJnUAos5","object":"chat
+200 : 
+         
+
+         
+
+         
+
+         
+{"id":"gen-1774177893-AZmTPDbsd2TcqG

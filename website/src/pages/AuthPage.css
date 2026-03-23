@@ -1,0 +1,46 @@
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 430px;
+  padding: 28px;
+}
+
+.auth-header {
+  margin-bottom: 18px;
+}
+
+.auth-title {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.auth-subtitle {
+  color: var(--text-secondary);
+}
+
+.auth-switch {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.auth-switch .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-error {
+  color: var(--rose);
+  font-size: 12px;
+}
