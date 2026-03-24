@@ -2,6 +2,7 @@ import './PageShared.css'
 import './ChatbotPage.css'
 
 export default function ChatbotPage() {
+  const chatbotUrl = import.meta.env.VITE_CHATBOT_URL || 'http://localhost:8081'
   return (
     <div className="chatbot-page">
       <div className="chatbot-header animate-fadeUp">
@@ -12,7 +13,7 @@ export default function ChatbotPage() {
           </p>
         </div>
         <a
-          href="http://localhost:8081"
+          href={chatbotUrl}
           target="_blank"
           rel="noreferrer"
           className="btn btn--ghost btn--sm"
@@ -24,7 +25,7 @@ export default function ChatbotPage() {
       <div className="chatbot-frame-wrap animate-fadeUp" style={{ animationDelay: '0.1s' }}>
         <iframe
           id="chatbot-iframe"
-          src="http://localhost:8081"
+          src={chatbotUrl}
           title="PROMPTFORGE Chatbot"
           className="chatbot-frame"
           allow="clipboard-read; clipboard-write"
@@ -34,8 +35,7 @@ export default function ChatbotPage() {
       <div className="chatbot-notice animate-fadeUp" style={{ animationDelay: '0.2s' }}>
         <span>ℹ</span>
         <span>
-          The chatbot runs independently on <strong className="mono">localhost:8081</strong>.
-          Start it with: <code>cd chatbot &amp;&amp; .\start-local.ps1</code>
+          The chatbot service: <strong className="mono">{chatbotUrl}</strong>
         </span>
       </div>
     </div>
