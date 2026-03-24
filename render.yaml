@@ -20,8 +20,7 @@ services:
 
   - type: web
     name: chatbot
-    env: node
+    env: static
     plan: free
     rootDir: chatbot
-    buildCommand: npm install
-    startCommand: npm start
+    staticPublishPath: .
