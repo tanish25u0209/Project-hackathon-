@@ -7,7 +7,7 @@ const NAV = [
   { to: '/results',  icon: '📊', label: 'Results' },
   { to: '/library',  icon: '💡', label: 'Idea Library' },
   { to: '/history',  icon: '🕒', label: 'Sessions' },
-  { to: '/chatbot',  icon: '⚡', label: 'PROMPTFORGE' },
+  { to: '/chatbot',  icon: '⚡', label: 'TeamSynth AI' },
 ]
 
 export default function Sidebar({ user, onLogout }) {
@@ -17,7 +17,7 @@ export default function Sidebar({ user, onLogout }) {
       <div className="sidebar__logo">
         <div className="sidebar__logo-icon">⚡</div>
         <div>
-          <div className="sidebar__logo-title">PROMPTFORGE</div>
+          <div className="sidebar__logo-title">TeamSynth AI</div>
           <div className="sidebar__logo-sub">Multi-LLM Platform</div>
         </div>
       </div>

@@ -30,7 +30,7 @@ export default function AuthPage({ onAuthSuccess }) {
     <div className="auth-page">
       <div className="auth-card card card--glow animate-fadeUp">
         <div className="auth-header">
-          <h1 className="auth-title">PROMPTFORGE</h1>
+          <h1 className="auth-title">TeamSynth AI</h1>
           <p className="auth-subtitle">Sign in to access project-based file storage</p>
         </div>
 

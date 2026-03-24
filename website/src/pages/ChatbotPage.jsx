@@ -7,9 +7,9 @@ export default function ChatbotPage() {
     <div className="chatbot-page">
       <div className="chatbot-header animate-fadeUp">
         <div>
-          <h1 className="page-title">⚡ PROMPTFORGE Chat</h1>
+          <h1 className="page-title">⚡ TeamSynth AI Chat</h1>
           <p className="page-subtitle">
-            The original PROMPTFORGE chatbot interface — multi-model interactive chat
+            The TeamSynth AI chatbot interface — multi-model interactive chat
           </p>
         </div>
         <a
@@ -26,7 +26,7 @@ export default function ChatbotPage() {
         <iframe
           id="chatbot-iframe"
           src={chatbotUrl}
-          title="PROMPTFORGE Chatbot"
+          title="TeamSynth AI Chatbot"
           className="chatbot-frame"
           allow="clipboard-read; clipboard-write"
         />
