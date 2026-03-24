@@ -17,3 +17,11 @@ services:
     rootDir: storage
     buildCommand: npm install
     startCommand: npm start
+
+  - type: web
+    name: chatbot
+    env: node
+    plan: free
+    rootDir: chatbot
+    buildCommand: npm install
+    startCommand: npm start
